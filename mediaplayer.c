@@ -96,7 +96,7 @@ void playTrack(const struct Track *playlist)
             // Check for key press and toggle playback
             if (isKeyPressed())
             {
-                char key = _getch();
+                char key = getchar();
                 if (key == '2' || key == 'P') // Check for '2' or 'P' to pause
                 {
                     pauseTrack(playlist);
@@ -172,7 +172,7 @@ void pauseTrack(const struct Track *playlist)
     {
         if (isKeyPressed())
         {
-            char key = _getch();
+           char key = getchar();
             if (key == '1') // Check for '1' to resume playback
             {
                 isPlaying = 1;
