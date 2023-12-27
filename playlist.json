@@ -1,0 +1,44 @@
+{
+    "Playlist": [
+        {
+            "TrackID": 1,
+            "TrackName": "JSON EXAMPLE 1",
+            "Duration": 151
+        },
+        {
+            "TrackID": 2,
+            "TrackName": "Track 002",
+            "Duration": 302
+        },
+        {
+            "TrackID": 3,
+            "TrackName": "Track 003",
+            "Duration": 453
+        },
+        {
+            "TrackID": 4,
+            "TrackName": "Track 004",
+            "Duration": 204
+        },
+        {
+            "TrackID": 5,
+            "TrackName": "Track 005",
+            "Duration": 355
+        },
+        {
+            "TrackID": 6,
+            "TrackName": "Track 006",
+            "Duration": 506
+        },
+        {
+            "TrackID": 7,
+            "TrackName": "Track 007",
+            "Duration": 657
+        },
+        {
+            "TrackID": 8,
+            "TrackName": "Track 008",
+            "Duration": 808
+        }
+    ]
+}

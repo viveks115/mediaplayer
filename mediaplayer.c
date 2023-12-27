@@ -17,6 +17,7 @@ static int elapsedTime = 0;
 static int isPlaying = 1; // 0: Paused, 1: Playing
 static int shuffleEnabled = 0;
 static float playbackSpeed = 1.0;
+extern int totalTracks;
 // Function to format duration in hh:mm:ss
 void formatDuration(int durationInSeconds, char *formattedDuration)
 {
@@ -151,7 +152,7 @@ void playTrack(const struct Track *playlist)
         formatDuration(0, formattedDuration);
     } while (repeatTrack);
 
-    if ((currentTrackIndex != NUMBEROFTRACK - 1) || shuffleEnabled == 1)
+    if ((currentTrackIndex != totalTracks - 1) || shuffleEnabled == 1)
     {
         nextTrack(playlist);
         playTrack(playlist);
@@ -190,7 +191,7 @@ void nextTrack(const struct Track *playlist)
         int randomIndex = currentTrackIndex;
         while (randomIndex == currentTrackIndex)
         {
-            randomIndex = rand() % NUMBEROFTRACK;
+            randomIndex = rand() % totalTracks;
         }
         currentTrackIndex = randomIndex;
     }
@@ -200,7 +201,7 @@ void nextTrack(const struct Track *playlist)
         currentTrackIndex++;
 
         // Check if we reached the end of the playlist, loop back to the beginning
-        if (currentTrackIndex == NUMBEROFTRACK)
+        if (currentTrackIndex == totalTracks)
         {
             currentTrackIndex = 0;
         }

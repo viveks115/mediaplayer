@@ -1,11 +1,12 @@
-// main.c
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include "cJSON.h"
 #include "track.h"
 #include "mediaplayer.h"
 
+#define FILENAME "playlist.json" // Replace with your JSON file name
+int totalTracks = 0;
 // Function to handle user input
 void *handleUserInput(void *arg)
 {
@@ -48,39 +49,108 @@ void *handleUserInput(void *arg)
 
 int main()
 {
-    // Create a playlist with three tracks
-    struct Track playlist[NUMBEROFTRACK]; // NUMBEROFTRACK defined  in track.h
+    // Initialize Jansson
+    cJSON *root = NULL;
+    cJSON *playlistArray = NULL;
+    cJSON *trackObj = NULL;
 
-    // Initialize tracks
-    for (int i = 0; i < NUMBEROFTRACK; i++)
+    // Open the JSON file
+    FILE *file = fopen(FILENAME, "r");
+    if (!file)
     {
-        char result[9];
-        setTrackId(&playlist[i], (i + 1));
-        sprintf(result, "Track %d", (i + 1));
-        setTrackName(&playlist[i], result);
-        setDurationInSeconds(&playlist[i], (i + 1) * 10);
+        fprintf(stderr, "Error opening JSON file.\n");
+        return 1;
     }
-    // // setTrackId(&playlist[0], 1);
-    // setTrackName(&playlist[0], "Track 1");
-    // setDurationInSeconds(&playlist[0], 10);
 
-    // setTrackId(&playlist[1], 2);
-    // setTrackName(&playlist[1], "Track 2");
-    // setDurationInSeconds(&playlist[1], 15);
+    // Read the contents of the file
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
 
-    // setTrackId(&playlist[2], 3);
-    // setTrackName(&playlist[2], "Track 3");
-    // setDurationInSeconds(&playlist[2], 12);
+    char *fileContent = (char *)malloc(fileSize + 1);
+    fread(fileContent, 1, fileSize, file);
+    fclose(file);
+
+    // Parse the JSON content
+    root = cJSON_Parse(fileContent);
+    free(fileContent);
+
+    if (!root)
+    {
+        fprintf(stderr, "Error parsing JSON file.\n");
+        return 1;
+    }
+
+    // Get the "Playlist" array from the JSON file
+    playlistArray = cJSON_GetObjectItemCaseSensitive(root, "Playlist");
+    if (!cJSON_IsArray(playlistArray))
+    {
+        fprintf(stderr, "Error: Playlist is not an array.\n");
+        cJSON_Delete(root);
+        return 1;
+    }
+
+    // Create a playlist with the number of tracks in the array
+    size_t numTracks = cJSON_GetArraySize(playlistArray);
+    totalTracks = numTracks;
+    struct Track *playlist = (struct Track *)malloc(numTracks * sizeof(struct Track));
+
+    // Initialize tracks from JSON
+    for (size_t i = 0; i < numTracks; i++)
+    {
+        trackObj = cJSON_GetArrayItem(playlistArray, i);
+
+        // Get TrackID
+        cJSON *trackIdJson = cJSON_GetObjectItemCaseSensitive(trackObj, "TrackID");
+        if (!cJSON_IsNumber(trackIdJson))
+        {
+            fprintf(stderr, "Error: TrackID is not a number.\n");
+            cJSON_Delete(root);
+            free(playlist);
+            return 1;
+        }
+        int trackId = trackIdJson->valueint;
+        setTrackId(&playlist[i], trackId);
+
+        // Get TrackName
+        cJSON *trackNameJson = cJSON_GetObjectItemCaseSensitive(trackObj, "TrackName");
+        if (!cJSON_IsString(trackNameJson))
+        {
+            fprintf(stderr, "Error: TrackName is not a string.\n");
+            cJSON_Delete(root);
+            free(playlist);
+            return 1;
+        }
+        const char *trackName = trackNameJson->valuestring;
+        setTrackName(&playlist[i], trackName);
+
+        // Get Duration
+        cJSON *durationJson = cJSON_GetObjectItemCaseSensitive(trackObj, "Duration");
+        if (!cJSON_IsNumber(durationJson))
+        {
+            fprintf(stderr, "Error: Duration is not a number.\n");
+            cJSON_Delete(root);
+            free(playlist);
+            return 1;
+        }
+        int duration = durationJson->valueint;
+        setDurationInSeconds(&playlist[i], duration);
+    }
+
+    // Close the JSON file and release resources
+    cJSON_Delete(root);
 
     // Playback thread
     pthread_t playbackThread;
 
     // Start handling user input in a separate thread
-    // pthread_create(&thread, NULL, FunctionName, NULL);
     pthread_create(&playbackThread, NULL, handleUserInput, (void *)playlist);
 
     // Wait for the playback thread to finish
     pthread_join(playbackThread, NULL);
+
+    // Free allocated memory
+    free(playlist);
 
     return 0;
 }
